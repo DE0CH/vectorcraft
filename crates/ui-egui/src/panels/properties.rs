@@ -701,28 +701,12 @@ fn guide_sections(app: &mut VectorcraftApp, ui: &mut Ui, guides: (Option<f64>, O
 
 fn document_sections(app: &mut VectorcraftApp, ui: &mut Ui) {
     let units = app.session.general_unit();
-    section_header(ui, tl!("Document"));
-    ui.horizontal(|ui| {
-        dim_label(ui, tl!("Units"));
-        let labels: Vec<&str> = Unit::ALL.iter().map(|u| u.label()).collect();
-        if let Some(i) = widgets::dropdown(ui, "units", units.label(), &labels, 140.0) {
-            app.run("document.setUnits", json!({"units": labels[i]})).ok();
-        }
-    });
-    let w = (ui.available_width() - 6.0) / 2.0;
-    ui.horizontal(|ui| {
-        if widgets::flat_button(ui, tl!("Document Setup"), w).clicked() {
-            app.run("file.documentSetup", json!({})).ok();
-        }
-        if widgets::flat_button(ui, tl!("Edit Artboards"), w).clicked() {
-            app.select_tool("artboard");
-        }
-    });
-    let artboards = app.session.active().map_or(0, |d| d.doc.artboards.len());
-    if artboards > 1 {
-        rearrange_button(app, ui, artboards, w);
+    // Embedded (crate::edition): the page owns the document and its settings: no Document, Preferences or Quick
+    // Actions sections.
+    let embedded = crate::edition::embedded();
+    if !embedded {
+        document_section(app, ui, units);
     }
-    divider(ui);
     section_header(ui, tl!("Appearance"));
     fill_stroke_rows(app, ui);
     divider(ui);
@@ -759,6 +743,9 @@ fn document_sections(app: &mut VectorcraftApp, ui: &mut Ui) {
     if widgets::check(ui, tl!("Snap to Grid"), app.ui.view.snap_to_grid, true) {
         app.ui.view.snap_to_grid ^= true;
     }
+    if embedded {
+        return;
+    }
     divider(ui);
     section_header(ui, tl!("Preferences"));
     let fw = super::field_width(ui);
@@ -783,6 +770,32 @@ fn document_sections(app: &mut VectorcraftApp, ui: &mut Ui) {
             app.run("edit.preferences", json!({})).ok();
         }
     });
+}
+
+/// The Document section: units, Document Setup, Edit Artboards (and Rearrange with several artboards).
+fn document_section(app: &mut VectorcraftApp, ui: &mut Ui, units: Unit) {
+    section_header(ui, tl!("Document"));
+    ui.horizontal(|ui| {
+        dim_label(ui, tl!("Units"));
+        let labels: Vec<&str> = Unit::ALL.iter().map(|u| u.label()).collect();
+        if let Some(i) = widgets::dropdown(ui, "units", units.label(), &labels, 140.0) {
+            app.run("document.setUnits", json!({"units": labels[i]})).ok();
+        }
+    });
+    let w = (ui.available_width() - 6.0) / 2.0;
+    ui.horizontal(|ui| {
+        if widgets::flat_button(ui, tl!("Document Setup"), w).clicked() {
+            app.run("file.documentSetup", json!({})).ok();
+        }
+        if widgets::flat_button(ui, tl!("Edit Artboards"), w).clicked() {
+            app.select_tool("artboard");
+        }
+    });
+    let artboards = app.session.active().map_or(0, |d| d.doc.artboards.len());
+    if artboards > 1 {
+        rearrange_button(app, ui, artboards, w);
+    }
+    divider(ui);
 }
 
 pub fn transform_section(app: &mut VectorcraftApp, ui: &mut Ui) {
