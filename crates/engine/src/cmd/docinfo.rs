@@ -23,6 +23,15 @@ pub fn specs() -> Vec<CommandSpec> {
             info
         ),
         cmd!(
+            query "document.state",
+            "Document State",
+            [],
+            None,
+            "{} → {revision (moves on every change, selection and view changes included), content (a number that changes only when the document's content changes and is the same for the same content: what a host polls to know there is something to save or send), dirty (changed since opened or saved)}",
+            has_doc,
+            state
+        ),
+        cmd!(
             "object.makePixelPerfect",
             "Make Pixel Perfect",
             ["Object"],
@@ -32,6 +41,15 @@ pub fn specs() -> Vec<CommandSpec> {
             pixel_perfect
         ),
     ]
+}
+
+/// `document.state`: what a host page polls cheaply (the labels edition saves when `content` moves).
+fn state(s: &mut Session, _p: &Value) -> Result<Value> {
+    let st = s.doc()?;
+    // The document is copy-on-write and every earlier version stays in the undo history, so its address
+    // identifies its content for as long as anyone compares against it.
+    let content = std::sync::Arc::as_ptr(&st.doc) as usize;
+    Ok(json!({"revision": st.revision, "content": content, "dirty": st.is_dirty()}))
 }
 
 /// Document Info's categories: (id, title), in the order the panel and the report show them.
@@ -467,6 +485,25 @@ fn pixel_perfect(s: &mut Session, p: &Value) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn state_content_moves_with_edits_not_selection() {
+        let mut s = Session::new();
+        s.execute("file.new", &json!({"width": 200, "height": 100})).unwrap();
+        let st = |s: &mut Session| s.execute("document.state", &json!({})).unwrap();
+        let a = st(&mut s);
+        assert_eq!(a["dirty"], false);
+        s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap();
+        let b = st(&mut s);
+        assert_ne!(a["content"], b["content"], "an edit changes the content");
+        assert_eq!(b["dirty"], true);
+        s.execute("select.none", &json!({})).unwrap();
+        let c = st(&mut s);
+        assert_eq!(b["content"], c["content"], "a selection change does not");
+        assert!(c["revision"].as_u64() >= b["revision"].as_u64());
+        s.execute("edit.undo", &json!({})).unwrap();
+        assert_eq!(st(&mut s)["content"], a["content"], "undo returns to the same content");
+    }
 
     #[test]
     fn info_counts_objects_fonts_and_selection_only() {
