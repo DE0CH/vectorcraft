@@ -85,6 +85,8 @@ pub fn install() {
     if !edition::set(&LABELS) {
         log::warn!("vectorcraft-web: an edition was set already");
     }
+    // YYC's staff read Traditional Chinese (Hong Kong): the interface is in it whatever the browser says.
+    vectorcraft_ui_egui::i18n::set_system_locales(&["zh-HK".to_string()]);
 }
 
 /// The edition's layout, on a new app: no contextual task bar or control bar, the basic toolbar,

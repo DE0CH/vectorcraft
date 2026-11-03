@@ -59,13 +59,15 @@ pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
         }
         ui.horizontal_centered(|ui| {
             // With the system title bar the OS draws its own icon: no in-app brand mark.
-            if !system {
+            // An edition (crate::edition) is one job's tool: no brand mark, Home, workspaces, search or Discord.
+            let edition = crate::edition::get().is_some();
+            if !system && !edition {
                 let (r, _) = ui.allocate_exact_size(vec2(MARK, MARK), Sense::hover());
                 crate::brand::paint_mark(ui, r);
                 ui.add_space(6.0);
             }
             let on_home = menus::home_showing(app);
-            if widgets::icon_button(ui, "house", tl!("Home"), on_home, 20.0).clicked() {
+            if !edition && widgets::icon_button(ui, "house", tl!("Home"), on_home, 20.0).clicked() {
                 app.run("app.home", json!({})).ok();
             }
             ui.add_space(2.0);
@@ -74,6 +76,9 @@ pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
             // The right-side group fills the space after the menus from the right; when it runs
             // short, Discord goes first (it is also under Help), then the search icon (the palette
             // stays under its shortcut), then the workspace switcher narrows.
+            if edition {
+                return;
+            }
             let full = ui.max_rect();
             let right_edge = if custom { full.right() - titlebar::WIDTH - 10.0 } else { full.right() };
             let right = egui::Rect::from_min_max(egui::pos2(menus_end + 8.0, full.top()), egui::pos2(right_edge, full.bottom()));

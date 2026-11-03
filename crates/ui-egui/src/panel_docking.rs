@@ -154,7 +154,8 @@ pub(crate) fn with_canvas(columns: Vec<Column<String>>, floating: Vec<Floating<S
 /// when it holds it (the open flyout).
 fn default_from(tab: DockTab, order: &[DockTab], collapsed: bool, width: Option<f32>, front: Option<&str>) -> Layout<String> {
     let mut placed = Placed::default();
-    let panels: Vec<String> = main_tabs(order).into_iter().filter_map(|t| placed.take(t.info().0)).collect();
+    let panels: Vec<String> =
+        main_tabs(order).into_iter().filter_map(|t| placed.take(t.info().0)).filter(|p| crate::edition::allows_panel(p)).collect();
     let active = panels.iter().position(|p| p == tab.info().0).unwrap_or(0);
     let mut columns = Vec::new();
     if !panels.is_empty() {
@@ -165,7 +166,16 @@ fn default_from(tab: DockTab, order: &[DockTab], collapsed: bool, width: Option<
             iconic_width: Some(ICON_WIDTH),
         });
     }
-    let groups: Vec<Group<String>> = ICON_PANEL_GROUPS.iter().filter_map(|g| placed.group(g)).collect();
+    let groups: Vec<Group<String>> = ICON_PANEL_GROUPS
+        .iter()
+        .filter_map(|g| placed.group(g))
+        .filter_map(|mut g| {
+            // An edition's dock holds only its panels.
+            g.panels.retain(|p| crate::edition::allows_panel(p));
+            g.active = g.active.min(g.panels.len().saturating_sub(1));
+            (!g.panels.is_empty()).then_some(g)
+        })
+        .collect();
     if !groups.is_empty() {
         columns.push(Column { groups, width: COLUMN_WIDTH, iconic: true, iconic_width: Some(ICON_WIDTH) });
     }
