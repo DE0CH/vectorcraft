@@ -70,8 +70,13 @@ fn undo_reverts_ones_own_step_and_keeps_the_others() {
     let mine = rect(&mut b, 60.0); // b's own step
     ops(&mut b);
     // Both editors run in this one process, so they share an id lane (in the app each has its own,
-    // collab.lane): `a` draws a second rectangle so that the one checked has an id `b` didn't use.
-    rect(&mut a, 20.0);
+    // collab.lane): `a`'s counter moves far ahead so that its rectangle's id is one `b` didn't use.
+    {
+        let st = a.doc_mut().unwrap();
+        let d = Arc::make_mut(&mut st.doc);
+        let next = d.peek_next_id() + 1000;
+        d.reserve_ids(next);
+    }
     let theirs = rect(&mut a, 30.0);
     b.execute("collab.apply", &json!({"ops": ops(&mut a)})).unwrap();
     b.execute("edit.undo", &json!({})).unwrap();
