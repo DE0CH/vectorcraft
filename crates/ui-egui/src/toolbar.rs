@@ -78,7 +78,11 @@ pub(crate) fn tip(t: &ToolInfo) -> String {
 pub(crate) fn slots(app: &VectorcraftApp) -> Vec<(Option<&'static str>, Vec<&'static str>)> {
     // An edition's toolbar is fixed: its own tools, whatever Edit Toolbar or Advanced say.
     if let Some(e) = crate::edition::get() {
-        return e.tools.iter().flat_map(|(cat, ss)| ss.iter().enumerate().map(move |(i, s)| (if i == 0 { Some(*cat) } else { None }, s.to_vec()))).collect();
+        return e
+            .tools
+            .iter()
+            .flat_map(|(cat, ss)| ss.iter().enumerate().map(move |(i, s)| (if i == 0 { Some(*cat) } else { None }, s.to_vec())))
+            .collect();
     }
     if let Some(edited) = crate::edit_toolbar::edited_slots(app) {
         edited
