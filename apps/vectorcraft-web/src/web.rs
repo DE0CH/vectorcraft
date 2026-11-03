@@ -64,9 +64,10 @@ pub fn start() {
         log::error!("missing <canvas id=\"{CANVAS_ID}\">");
         return;
     };
-    detect_language();
+    // Before the language: an edition may set the interface's (the first locale set stands).
     #[cfg(feature = "labels")]
     crate::labels::install();
+    detect_language();
     wasm_bindgen_futures::spawn_local(async move {
         // Before the first frame, which looks for copies a crash left behind.
         let locks = WebLocks::start(RECOVERY_PREFIX).await;
