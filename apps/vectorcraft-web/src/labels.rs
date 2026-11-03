@@ -77,13 +77,8 @@ const TOOLS: &[(&str, &[&[&str]])] = &[
     ("Navigate", &[&["hand"], &["zoom"]]),
 ];
 
-static LABELS: Edition = Edition {
-    name: "Labels",
-    commands: COMMANDS,
-    menus: &["File", "Edit", "Object", "Type", "Select", "View"],
-    tools: TOOLS,
-    panels: PANELS,
-};
+static LABELS: Edition =
+    Edition { name: "Labels", commands: COMMANDS, menus: &["File", "Edit", "Object", "Type", "Select", "View"], tools: TOOLS, panels: PANELS };
 
 /// Make the app the labels edition: before it starts.
 pub fn install() {

@@ -23,10 +23,10 @@
 mod api;
 #[cfg(target_arch = "wasm32")]
 mod fonts;
-#[cfg(all(target_arch = "wasm32", feature = "labels"))]
-mod labels;
 #[cfg(any(target_arch = "wasm32", test))]
 mod keys;
+#[cfg(all(target_arch = "wasm32", feature = "labels"))]
+mod labels;
 #[cfg(target_arch = "wasm32")]
 mod locks;
 #[cfg(any(target_arch = "wasm32", test))]

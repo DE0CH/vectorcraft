@@ -125,7 +125,7 @@ fn lane(_s: &mut Session, p: &Value) -> Result<Value> {
     let lane = p.get("lane").and_then(Value::as_u64).ok_or_else(|| bad("collab.lane", "lane must be a whole number"))?;
     let lanes = p.get("lanes").and_then(Value::as_u64).ok_or_else(|| bad("collab.lane", "lanes must be a whole number"))?;
     if !vectorcraft_doc::set_id_lane(lane, lanes) {
-        return Err(bad("collab.lane", &format!("lanes must be 1 to {} and lane under lanes", vectorcraft_doc::MAX_ID_LANES)));
+        return Err(bad("collab.lane", format!("lanes must be 1 to {} and lane under lanes", vectorcraft_doc::MAX_ID_LANES)));
     }
     Ok(json!({"lane": lane, "lanes": lanes}))
 }
@@ -133,9 +133,13 @@ fn lane(_s: &mut Session, p: &Value) -> Result<Value> {
 fn apply_cmd(s: &mut Session, p: &Value) -> Result<Value> {
     let raw = p.get("ops").and_then(Value::as_array).ok_or_else(|| bad("collab.apply", "ops must be a list"))?;
     if raw.len() > MAX_OPS {
-        return Err(bad("collab.apply", &format!("at most {MAX_OPS} operations at once")));
+        return Err(bad("collab.apply", format!("at most {MAX_OPS} operations at once")));
     }
-    let ops: Vec<Op> = raw.iter().map(|o| serde_json::from_value(o.clone())).collect::<std::result::Result<_, _>>().map_err(|e| bad("collab.apply", &e.to_string()))?;
+    let ops: Vec<Op> = raw
+        .iter()
+        .map(|o| serde_json::from_value(o.clone()))
+        .collect::<std::result::Result<_, _>>()
+        .map_err(|e| bad("collab.apply", e.to_string()))?;
     let id = uid(s)?;
     let st = s.doc_mut()?;
     let (applied, skipped) = apply(Arc::make_mut(&mut st.doc), &ops);
@@ -212,7 +216,7 @@ fn diff_children(parent: Option<NodeId>, old: &[Arc<Node>], new: &[Arc<Node>], o
 }
 
 fn to_value(n: &Node) -> Result<Value> {
-    serde_json::to_value(n).map_err(|e| bad("collab", &e.to_string()))
+    serde_json::to_value(n).map_err(|e| bad("collab", e.to_string()))
 }
 
 /// A node as saved, without its children.
@@ -228,7 +232,7 @@ fn shallow(n: &Node) -> Result<Value> {
 fn fields(d: &Document) -> Result<Map<String, Value>> {
     let mut bare = d.clone();
     bare.layers = vec![];
-    match serde_json::to_value(&bare).map_err(|e| bad("collab", &e.to_string()))? {
+    match serde_json::to_value(&bare).map_err(|e| bad("collab", e.to_string()))? {
         Value::Object(mut m) => {
             for k in LOCAL_FIELDS {
                 m.remove(k);
