@@ -26,7 +26,9 @@ fn run_with(root: &Path, craft_fonts: Option<PathBuf>, staging: Option<PathBuf>)
     // Relative like build.rs: from the workspace root, not the directory Trunk runs hooks in.
     let dir = if dir.is_absolute() { dir } else { root.join(dir) };
     let staging = staging.ok_or("TRUNK_STAGING_DIR is unset: run this as the Trunk post_build hook")?;
-    let (copied, skipped) = copy(&root.join("crates/text/web-fonts.txt"), &dir, &staging)?;
+    // CRAFT_WEB_FONTS: the list an edition builds with in place of web-fonts.txt (crates/text/build.rs).
+    let list = std::env::var_os("CRAFT_WEB_FONTS").filter(|p| !p.is_empty()).map_or_else(|| root.join("crates/text/web-fonts.txt"), PathBuf::from);
+    let (copied, skipped) = copy(&list, &dir, &staging)?;
     if !skipped.is_empty() {
         eprintln!("warning: web build won't fetch {} (not in CRAFT_FONTS_DIR={}; an older craft-fonts?)", skipped.join(", "), dir.display());
     }

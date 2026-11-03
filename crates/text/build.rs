@@ -23,6 +23,7 @@ fn main() {
     println!("cargo::rerun-if-env-changed=CRAFT_FONTS_DIR");
     println!("cargo::rerun-if-env-changed=CRAFT_FONTS_REQUIRED");
     println!("cargo::rerun-if-changed=web-fonts.txt");
+    println!("cargo::rerun-if-env-changed=CRAFT_WEB_FONTS");
     println!("cargo::rerun-if-changed=build/web_fonts.rs");
     let required = std::env::var_os("CRAFT_FONTS_REQUIRED").is_some();
     let (mut fonts, mut web) = (String::new(), String::new());
@@ -106,7 +107,13 @@ fn craft_fonts(dir: &Path) -> Result<String, String> {
 /// One `WebFont { .. }` initialiser per `web-fonts.txt` line, from its craft-fonts manifest row, and
 /// the listed faces the manifest lacks (an older craft-fonts checkout), which are left out.
 fn web_font_entries(dir: &Path) -> Result<(String, Vec<String>), String> {
-    let list_path = PathBuf::from(std::env::var_os("CARGO_MANIFEST_DIR").unwrap_or_default()).join("web-fonts.txt");
+    // CRAFT_WEB_FONTS: another list in place of web-fonts.txt (an edition's fonts: the labels edition's
+    // Traditional Chinese faces); same format.
+    let list_path = match std::env::var_os("CRAFT_WEB_FONTS").filter(|p| !p.is_empty()) {
+        Some(p) => PathBuf::from(p),
+        None => PathBuf::from(std::env::var_os("CARGO_MANIFEST_DIR").unwrap_or_default()).join("web-fonts.txt"),
+    };
+    println!("cargo::rerun-if-changed={}", list_path.display());
     let list = std::fs::read_to_string(&list_path).map_err(|e| format!("{}: {e}", list_path.display()))?;
     let manifest_path = dir.join("fonts/manifest.txt");
     // WEB_FONTS follows the manifest (URLs and hashes), on every target.
