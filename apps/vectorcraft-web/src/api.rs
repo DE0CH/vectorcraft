@@ -10,6 +10,7 @@
 //! await vectorcraft.commands()                                 // command list
 //! const {base64} = await vectorcraft.screenshot()              // the canvas as PNG (base64)
 //! await vectorcraft.openFile("logo.svg", bytes)               // opened as a dropped file is
+//! vectorcraft.addFont(bytes)                                   // a font file (TTF/OTF/TTC): its faces join the fonts
 //! vectorcraft.captureDownloads(true)                           // saves stay in the page…
 //! vectorcraft.files(); await vectorcraft.readFile("logo.png")  // …to be read back
 //! ```
@@ -153,6 +154,18 @@ pub fn install() -> Result<(), JsValue> {
             });
             repaint();
             JsValue::from_bool(queued)
+        })
+        .into_js_value(),
+    )?;
+    // A font the page fetched itself (a web build has no font folders): its faces join the font
+    // database, as a background web font does, and type set in them redraws → the faces added.
+    set_fn(
+        &obj,
+        "addFont",
+        Closure::<dyn Fn(js_sys::Uint8Array) -> JsValue>::new(|bytes: js_sys::Uint8Array| {
+            let added = vectorcraft_text::FontDb::global().add_font(bytes.to_vec());
+            repaint();
+            JsValue::from_f64(added as f64)
         })
         .into_js_value(),
     )?;
