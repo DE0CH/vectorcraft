@@ -23,13 +23,27 @@ pub struct Edition {
     pub tools: &'static [(&'static str, &'static [&'static [&'static str]])],
     /// The panels (`window.panel` ids) that may open.
     pub panels: &'static [&'static str],
+    /// Embedded in another page as just the editor: no app bar (menus), no document tabs, no Home screen; text bound
+    /// to a variable is locked against typing (the page fills it from data sets). The page opens and saves the one
+    /// document itself.
+    pub embedded: bool,
+}
+
+/// Whether the app runs embedded ([`Edition::embedded`]).
+pub fn embedded() -> bool {
+    get().is_some_and(|e| e.embedded)
 }
 
 static EDITION: OnceLock<&'static Edition> = OnceLock::new();
 
 /// Make `edition` the app's edition, once, before the app starts; `false` if one was set already.
 pub fn set(edition: &'static Edition) -> bool {
-    EDITION.set(edition).is_ok()
+    let fresh = EDITION.set(edition).is_ok();
+    if fresh && edition.embedded {
+        // The page fills bound text from its data sets: typed characters there would be thrown away.
+        vectorcraft_doc::set_bound_text_locked(true);
+    }
+    fresh
 }
 
 /// The app's edition, if it runs one.
@@ -143,7 +157,14 @@ mod tests {
     #[test]
     fn filter_keeps_allowed_commands_and_tidies_separators() {
         // A local edition: the process-wide one is never set in tests, so the full app's tests are unaffected.
-        let e = Edition { name: "test", commands: &["a", "c"], menus: &["M"], tools: &[("Select", &[&["selection"]])], panels: &["layers"] };
+        let e = Edition {
+            name: "test",
+            commands: &["a", "c"],
+            menus: &["M"],
+            tools: &[("Select", &[&["selection"]])],
+            panels: &["layers"],
+            embedded: false,
+        };
         let items = vec![
             Item::Header("H1"),
             Item::Cmd("A", "a", Value::Null),

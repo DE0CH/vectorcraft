@@ -114,7 +114,7 @@ pub use text::{
     WrapShape,
 };
 pub use trace::TraceView;
-pub use variables::{DataSet, DataValue, Variable, VariableKind, Variables};
+pub use variables::{DataSet, DataValue, Variable, VariableKind, Variables, bound_text_locked, set_bound_text_locked};
 pub use vectorcraft_color as color;
 pub use vectorcraft_geom as geom;
 

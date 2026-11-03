@@ -180,5 +180,6 @@ pub(crate) fn home_key(app: &VectorcraftApp) -> (Option<u64>, usize) {
 /// and Preferences › General › Show The Home Screen When No Documents Are Open is on (#394). Off,
 /// an app with no document shows an empty window, and the Home button still opens the screen.
 pub(crate) fn home_showing(app: &VectorcraftApp) -> bool {
-    app.ui.home.is_some() || (app.session.active().is_none() && app.session.prefs.show_home_screen)
+    // Embedded (crate::edition): the page shows its one document, never the Home screen.
+    !crate::edition::embedded() && (app.ui.home.is_some() || (app.session.active().is_none() && app.session.prefs.show_home_screen))
 }

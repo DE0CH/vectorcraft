@@ -67,7 +67,7 @@ const COMMANDS: &[&str] = &[
 ];
 
 /// Panels that open (the Variables panel is the guest list).
-const PANELS: &[&str] = &["properties", "layers", "align", "transform", "character", "paragraph", "variables"];
+const PANELS: &[&str] = &["properties", "align", "transform", "character", "paragraph", "variables"];
 
 /// The toolbar.
 const TOOLS: &[(&str, &[&[&str]])] = &[
@@ -77,8 +77,14 @@ const TOOLS: &[(&str, &[&[&str]])] = &[
     ("Navigate", &[&["hand"], &["zoom"]]),
 ];
 
-static LABELS: Edition =
-    Edition { name: "Labels", commands: COMMANDS, menus: &["File", "Edit", "Object", "Type", "Select", "View"], tools: TOOLS, panels: PANELS };
+static LABELS: Edition = Edition {
+    name: "Labels",
+    commands: COMMANDS,
+    menus: &["File", "Edit", "Object", "Type", "Select", "View"],
+    tools: TOOLS,
+    panels: PANELS,
+    embedded: true,
+};
 
 /// Make the app the labels edition: before it starts.
 pub fn install() {

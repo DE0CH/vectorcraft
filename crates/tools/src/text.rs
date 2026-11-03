@@ -645,6 +645,13 @@ impl TypeTool {
     fn edit_at(&mut self, cx: &ToolContext, p: Point) -> Option<Vec<Action>> {
         let h = hit_test(cx.doc, p, vectorcraft_doc::hit::HitOptions { type_path_only: false, ..cx.hit_options() })?;
         let Some(NodeKind::Text(t)) = cx.doc.node(h.leaf).map(|n| &n.kind) else { return None };
+        // Text filled from a data set (and locked against typing: vectorcraft_doc::set_bound_text_locked) is only
+        // selected: its box moves, resizes and takes styles, its characters come from the data.
+        if vectorcraft_doc::bound_text_locked(cx.doc, h.leaf) {
+            let mut out = self.finish(cx);
+            out.push(Action::Exec("select.set".into(), json!({"ids": [h.leaf.0]})));
+            return Some(out);
+        }
         let lay = self.layout(t);
         let byte = vectorcraft_text::hit_byte(&lay, t.xf.inverse() * p);
         let mut out = self.finish(cx);

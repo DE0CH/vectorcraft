@@ -1192,6 +1192,10 @@ impl SelectionTool {
         if let Some(h) = hit_test(cx.doc, p, cx.hit_options()) {
             let top = h.top_object(cx.isolation);
             if cx.doc.node(top).is_some_and(|n| matches!(n.kind, vectorcraft_doc::NodeKind::Text(_))) {
+                // Text filled from a data set, locked against typing (vectorcraft_doc::set_bound_text_locked), stays selected.
+                if vectorcraft_doc::bound_text_locked(cx.doc, top) {
+                    return vec![];
+                }
                 return vec![Action::SwitchTool("type".into())];
             }
             // A symbol instance: its symbol is edited in symbol editing mode, except one inside

@@ -431,7 +431,7 @@ impl VectorcraftApp {
     pub(crate) fn canvas_area(&mut self, ui: &mut egui::Ui) {
         let t = theme::Tokens::get(ui.ctx());
         ui.painter().rect_filled(ui.max_rect(), 0.0, t.pasteboard);
-        if self.ui.screen_mode < 3 {
+        if self.ui.screen_mode < 3 && !crate::edition::embedded() {
             chrome::doc_tabs(self, ui);
         }
         if !canvas::tiled_area(self, ui) {
@@ -487,7 +487,7 @@ impl VectorcraftApp {
         // A selection move released over a panel ends before any panel sees the release (#2826).
         canvas::release_over_panel(self, &ctx);
         let t = theme::Tokens::get(&ctx);
-        if self.ui.screen_mode < 2 {
+        if self.ui.screen_mode < 2 && !crate::edition::embedded() {
             chrome::app_bar(self, ui);
             if self.ui.control_bar {
                 chrome::control_bar(self, ui);

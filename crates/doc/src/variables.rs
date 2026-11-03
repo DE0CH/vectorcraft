@@ -300,3 +300,18 @@ impl Document {
         out
     }
 }
+
+/// Whether text bound to a variable is locked against typing ([`set_bound_text_locked`]): an editor that fills
+/// every bound text from its data sets (the labels edition) would throw typed text away at the next data set.
+static BOUND_TEXT_LOCKED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Lock (or unlock) typing into text bound to a variable, process-wide; the Type tool then selects such text
+/// instead of placing a caret in it (its box can still be moved, resized and styled).
+pub fn set_bound_text_locked(locked: bool) {
+    BOUND_TEXT_LOCKED.store(locked, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// Whether typing into `id` is refused: the lock is on and `id` is bound to a variable.
+pub fn bound_text_locked(doc: &Document, id: NodeId) -> bool {
+    BOUND_TEXT_LOCKED.load(std::sync::atomic::Ordering::Relaxed) && doc.variables.bindings.get(&id).is_some_and(|b| !b.is_empty())
+}
