@@ -135,7 +135,7 @@ pub fn context_items(app: &VectorcraftApp) -> Vec<Item> {
             c("Export Selection…", "file.exportSelection"),
         ]);
     }
-    prune(app, v)
+    crate::edition::filter_items(&prune(app, v))
 }
 
 /// `items` without the commands that can't run now (Undo and Redo stay, greyed out), submenus

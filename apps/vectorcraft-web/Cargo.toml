@@ -9,6 +9,10 @@ publish = false
 [lints]
 workspace = true
 
+[features]
+# The labels edition (docs/labels-edition.md, src/labels.rs): YYC's cut-down label editor.
+labels = []
+
 [[bin]]
 name = "vectorcraft-web"
 path = "src/main.rs"

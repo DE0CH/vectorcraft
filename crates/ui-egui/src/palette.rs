@@ -22,6 +22,8 @@ pub fn items() -> Vec<(String, String, String)> {
     for tool in vectorcraft_tools::catalog::all_tools() {
         items.push((tool.label.to_string(), format!("tool:{}", tool.id), crate::shortcut_editor::tool_shortcut(tool.id).unwrap_or("").to_string()));
     }
+    // An edition's palette finds only what it offers.
+    items.retain(|(_, id, _)| crate::edition::allows(id));
     items
 }
 

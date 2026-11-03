@@ -12,7 +12,8 @@ pub fn menu_tree() -> Vec<(&'static str, Vec<Item>)> {
 
 pub fn menu_tree_named(english_names: bool) -> Vec<(&'static str, Vec<Item>)> {
     let panel = |label: &'static str, id: &'static str| cp(label, "window.panel", json!({ "panel": id, "toggle": true }));
-    vec![
+    // An edition (crate::edition) shows its own cut of the tree; the full app gets all of it.
+    crate::edition::filter_menus(vec![
         (
             // The application menu: About and Discord only. The in-window bar never shows it (File
             // is first there, as in Illustrator); on macOS `native_menu::mac_layout` composes the
@@ -704,7 +705,7 @@ pub fn menu_tree_named(english_names: bool) -> Vec<(&'static str, Vec<Item>)> {
                 c("About VectorCraft", "help.about"),
             ],
         ),
-    ]
+    ])
 }
 
 /// Object → Transform (also in the canvas context menu).

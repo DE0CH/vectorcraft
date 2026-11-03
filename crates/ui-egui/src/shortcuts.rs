@@ -795,6 +795,9 @@ fn dispatch(app: &mut VectorcraftApp, ctx: &egui::Context, accept: impl FnMut(&H
                 *key = Key::Plus;
             }
         }
+        // An edition's shortcuts reach only its own commands, tools and panels.
+        let mut accept = accept;
+        let accept = |h: &Hit| crate::edition::allows(&h.command.id) && accept(h);
         dispatcher.dispatch_filtered(i, &mirror.keymap, &Active::NONE, accept).into_iter().map(|h| h.command).collect()
     })
 }

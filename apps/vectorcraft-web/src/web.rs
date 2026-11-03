@@ -65,6 +65,8 @@ pub fn start() {
         return;
     };
     detect_language();
+    #[cfg(feature = "labels")]
+    crate::labels::install();
     wasm_bindgen_futures::spawn_local(async move {
         // Before the first frame, which looks for copies a crash left behind.
         let locks = WebLocks::start(RECOVERY_PREFIX).await;
@@ -136,7 +138,11 @@ async fn run(host: Host, canvas: web_sys::HtmlCanvasElement, moving: Option<Movi
                         if let Err(e) = crate::api::install() {
                             log::error!("vectorcraft-web: couldn't install window.vectorcraft: {}", js_err(e));
                         }
-                        VectorcraftApp::new(Session::new(), services).with_control(control_rx)
+                        #[allow(unused_mut)] // changed only by the labels edition
+                        let mut app = VectorcraftApp::new(Session::new(), services).with_control(control_rx);
+                        #[cfg(feature = "labels")]
+                        crate::labels::configure(&mut app);
+                        app
                     }
                 };
                 Ok(Box::new(WebShell { app: Some(app), host, canvas: page, loss }))

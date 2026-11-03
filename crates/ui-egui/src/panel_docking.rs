@@ -325,6 +325,9 @@ pub(crate) fn command(app: &mut VectorcraftApp, id: &str, params: &Value) -> Opt
 fn show_panel(app: &mut VectorcraftApp, params: &Value) -> Result<Value, String> {
     let raw = params.get("panel").and_then(Value::as_str).unwrap_or_default();
     let panel = normalize(raw).ok_or_else(|| format!("unknown panel `{raw}`"))?;
+    if !crate::edition::allows_panel(panel) {
+        return Err(format!("the {} edition has no `{panel}` panel", crate::edition::get().map_or("", |e| e.name)));
+    }
     let layout = layout_of(&app.ui);
     app.ui.dock = true;
     if in_iconic_column(&layout, panel) {

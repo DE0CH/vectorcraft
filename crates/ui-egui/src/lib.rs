@@ -27,6 +27,7 @@ pub mod background;
 mod brand;
 pub mod canvas;
 pub mod chrome;
+pub mod edition;
 mod clipboard_probe;
 pub mod community;
 pub mod control;
