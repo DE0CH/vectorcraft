@@ -54,6 +54,7 @@ impl Session {
             gradient_stop: None,
             active_appearance_item: None,
             eyedropper_sample: None,
+            collab: Default::default(),
             last_solid: Color::WHITE,
             last_gradient: GradientPaint::new(Default::default()),
             recent_colors: vec![],

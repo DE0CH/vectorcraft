@@ -255,13 +255,15 @@ impl Document {
         d
     }
 
-    /// Allocate a fresh node id.
+    /// Allocate a fresh node id. In live co-editing ([`set_id_lane`]) the id is the next one in this
+    /// editor's lane, so editors working on copies of one document never hand out the same id.
     pub fn alloc_id(&mut self) -> NodeId {
-        let id = NodeId(self.next_id);
+        let (lane, lanes) = id_lane();
+        let id = lane_id(self.next_id, lane, lanes);
         // Never reached from a counter [`Self::fix_next_id`] has seen (it stays under
         // [`MAX_NEXT_ID`]); saturating so that no counter can overflow.
-        self.next_id = self.next_id.saturating_add(1);
-        id
+        self.next_id = id.saturating_add(1);
+        NodeId(id)
     }
 
     pub fn peek_next_id(&self) -> u64 {
@@ -787,6 +789,60 @@ impl Document {
         match l.map(|n| &n.kind) {
             Some(NodeKind::Layer { color, .. }) => color.rgb(),
             _ => LAYER_COLORS[0].1,
+        }
+    }
+}
+
+/// This process's id lane in live co-editing: `(lane, lanes)`, every id it allocates `≡ lane (mod lanes)`.
+/// `(0, 1)` (the default) is the single-editor numbering. Process-wide: one editor per process (the web
+/// app, the MCP server).
+static ID_LANE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+
+/// The largest number of lanes ([`set_id_lane`]).
+pub const MAX_ID_LANES: u64 = 1 << 16;
+
+/// Allocate ids in lane `lane` of `lanes` from now on (live co-editing: each editor of a document gets its own
+/// lane); `false` (and nothing changes) when `lanes` is 0 or over [`MAX_ID_LANES`] or `lane >= lanes`.
+pub fn set_id_lane(lane: u64, lanes: u64) -> bool {
+    if lanes == 0 || lanes > MAX_ID_LANES || lane >= lanes {
+        return false;
+    }
+    ID_LANE.store((lane << 32) | lanes, std::sync::atomic::Ordering::Relaxed);
+    true
+}
+
+/// The first id at or above `next` in lane `lane` of `lanes` (`next` itself with one lane).
+pub fn lane_id(next: u64, lane: u64, lanes: u64) -> u64 {
+    if lanes <= 1 {
+        return next;
+    }
+    let lane = lane % lanes;
+    next.saturating_add((lane + lanes - next % lanes) % lanes)
+}
+
+/// The current id lane: `(lane, lanes)`.
+pub fn id_lane() -> (u64, u64) {
+    let v = ID_LANE.load(std::sync::atomic::Ordering::Relaxed);
+    (v >> 32, (v & 0xffff_ffff).max(1))
+}
+
+#[cfg(test)]
+mod lane_tests {
+    use super::lane_id;
+
+    #[test]
+    fn lanes_never_share_an_id() {
+        assert_eq!(lane_id(17, 0, 1), 17);
+        assert_eq!(lane_id(17, 3, 8), 19);
+        assert_eq!(lane_id(16, 0, 8), 16);
+        assert_eq!(lane_id(17, 0, 8), 24);
+        for next in 0..200 {
+            for lanes in 2..10 {
+                for lane in 0..lanes {
+                    let id = lane_id(next, lane, lanes);
+                    assert!(id >= next && id < next + lanes && id % lanes == lane);
+                }
+            }
         }
     }
 }

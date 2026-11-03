@@ -50,6 +50,8 @@ pub struct Session {
     pub prefs: Prefs,
     /// Whether Caps Lock is on, as the desktop host reports it; never saved with the preferences.
     pub caps_lock: bool,
+    /// Live co-editing: each document's base ([`cmd::collab`]).
+    pub(crate) collab: cmd::collab::Collab,
     /// Fill/stroke for new art (the toolbar proxy).
     pub paint: PaintDefaults,
     /// Which proxy is in front (true = Fill, false = Stroke) — the X key toggles.

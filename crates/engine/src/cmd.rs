@@ -17,6 +17,7 @@ mod css;
 mod cut;
 pub(crate) mod dimension;
 pub(crate) mod distortcmds;
+pub mod collab;
 mod docinfo;
 mod docmenu;
 pub(crate) mod docsetup;
@@ -285,6 +286,7 @@ pub fn command_specs() -> &'static [CommandSpec] {
         v.extend(docmenu::specs());
         v.extend(variablecmds::specs());
         v.extend(docinfo::specs());
+        v.extend(collab::specs());
         v.extend(panelcmds::specs());
         v.extend(buildcmds::specs());
         v.extend(shaper::specs());

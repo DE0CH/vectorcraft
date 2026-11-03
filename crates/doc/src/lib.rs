@@ -125,6 +125,7 @@ use vectorcraft_geom::{Affine, Point, Rect, Vec2};
 mod artboard;
 mod canvas_range;
 mod document;
+pub use document::{MAX_ID_LANES, id_lane, lane_id, set_id_lane};
 mod document_ext;
 mod document_guides;
 mod graphic_style;
