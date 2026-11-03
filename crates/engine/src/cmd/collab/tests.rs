@@ -69,6 +69,9 @@ fn undo_reverts_ones_own_step_and_keeps_the_others() {
     let (mut a, mut b) = pair();
     let mine = rect(&mut b, 60.0); // b's own step
     ops(&mut b);
+    // Both editors run in this one process, so they share an id lane (in the app each has its own,
+    // collab.lane): `a` draws a second rectangle so that the one checked has an id `b` didn't use.
+    rect(&mut a, 20.0);
     let theirs = rect(&mut a, 30.0);
     b.execute("collab.apply", &json!({"ops": ops(&mut a)})).unwrap();
     b.execute("edit.undo", &json!({})).unwrap();
